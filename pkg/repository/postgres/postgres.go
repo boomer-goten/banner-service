@@ -54,8 +54,10 @@ func (p *Postgres) BannerGet(tagID, featureID, offset, limit int, role string) (
 		tx = tx.Table("banners").Where("? = ANY(tag_ids) AND feature_id = ?", tagID, featureID).Select("banners.banner_id, tag_ids, feature_id, content, is_active, created_at, updated_at").Joins("join (SELECT banner_id, ARRAY_AGG(tag_id)::integer [] as tag_ids, feature_id from banner_tags GROUP BY banner_id, feature_id) as bt on banners.banner_id = bt.banner_id").Offset(offset).Order("banner_id")
 	} else if tagID > 0 {
 		tx = tx.Table("banners").Where("? = ANY(tag_ids)", tagID).Select("banners.banner_id, tag_ids, feature_id, content, is_active, created_at, updated_at").Joins("join (SELECT banner_id, ARRAY_AGG(tag_id)::integer [] as tag_ids, feature_id from banner_tags GROUP BY banner_id, feature_id) as bt on banners.banner_id = bt.banner_id").Offset(offset).Order("banner_id")
-	} else {
+	} else if featureID > 0 {
 		tx = tx.Table("banners").Where("feature_id = ?", featureID).Select("banners.banner_id, tag_ids, feature_id, content, is_active, created_at, updated_at").Joins("join (SELECT banner_id, ARRAY_AGG(tag_id)::integer [] as tag_ids, feature_id from banner_tags GROUP BY banner_id, feature_id) as bt on banners.banner_id = bt.banner_id").Offset(offset).Order("banner_id")
+	} else {
+		tx = tx.Table("banners").Select("banners.banner_id, tag_ids, feature_id, content, is_active, created_at, updated_at").Joins("join (SELECT banner_id, ARRAY_AGG(tag_id)::integer [] as tag_ids, feature_id from banner_tags GROUP BY banner_id, feature_id) as bt on banners.banner_id = bt.banner_id").Offset(offset).Order("banner_id")
 	}
 	if limit > 0 {
 		rows, err = tx.Limit(limit).Rows()

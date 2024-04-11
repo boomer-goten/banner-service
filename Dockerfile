@@ -10,7 +10,8 @@ RUN apt-get -y install postgresql-client
 RUN chmod +x wait_postgres.sh
 
 # build service
+RUN go get -d -v ./...
 RUN go mod download
 RUN go build -o banner-server ./cmd/banner-server/main.go 
-
+EXPOSE 8080
 CMD ["./banner-server"]
