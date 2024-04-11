@@ -1,0 +1,34 @@
+version: '3.8'
+
+# services:
+#   banner-server:
+#     build: ./
+#     command: ./wait_postgres.sh db ./banner-server --config=./env/dev/.env
+#     ports:
+#       - 8080:808
+#     depends_on:
+#       - db
+#     environment:
+#       - DB_PASSWORD=45hekmrf
+#       - DB_USER=alex
+#       - DB_TABLE=avito
+#     networks:
+#       - banner-network
+
+#   db:
+#     restart: always
+#     image: postgres:latest
+#     # volumes:
+#     # - ./.database/postgres/16/main:/var/lib/postgresql/16/main
+#     environment:
+#       - POSTGRES_USER=alex
+#       - POSTGRES_PASSWORD=45hekmrf
+#       - POSTGRES_DB=avito
+#     ports:
+#       - 5436:5432
+#     networks:
+#       - banner-network
+
+# networks:
+#   banner-network:
+#     driver: bridge
