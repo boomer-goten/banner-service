@@ -6,12 +6,13 @@ import (
 )
 
 type BannerTag struct {
-	BannerID  int
-	TagID     int     `gorm:"index:,unique,composite:uniqueTagFeature"`
-	FeatureID int     `gorm:"index:,unique,composite:uniqueTagFeature"`
-	Tags      Tag     `gorm:"foreignKey:TagID"`
-	Features  Feature `gorm:"foreignKey:FeatureID"`
-	Banners   Banner  `gorm:"foreignKey:BannerID"`
+	Tags        Tag     `gorm:"foreignKey:TagID"`
+	Features    Feature `gorm:"foreignKey:FeatureID"`
+	Banners     Banner  `gorm:"foreignKey:BannerID"`
+	BannerID    int
+	TagID       int `gorm:"index:,unique,composite:uniqueTagFeature"`
+	FeatureID   int `gorm:"index:,unique,composite:uniqueTagFeature"`
+	BannerTagID int `gorm:"primaryKey"`
 }
 
 func (BannerTag) TableName() string {

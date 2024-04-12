@@ -43,6 +43,10 @@ func (p *Postgres) MigrateDB() {
 	}
 	if !p.Db.Migrator().HasTable(&model.BannerTag{}) {
 		p.Db.AutoMigrate(&model.BannerTag{})
+		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_banners FOREIGN KEY (banner_id) REFERENCES banners(banner_id)")
+		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_tags FOREIGN KEY (tag_id) REFERENCES tags(tag_id)")
+		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_features FOREIGN KEY (feature_id) REFERENCES features(feature_id)")
+		// fmt.Println(res.Error.Error())
 	}
 }
 
@@ -90,10 +94,8 @@ func (p *Postgres) BannerGet(tagID, featureID, offset, limit int, role string) (
 }
 
 func (p *Postgres) BannerIdDelete(bannerID int) error {
-	var banner model.Banner
 	tx := p.Db.Begin()
-	var banner_tags []model.BannerTag
-	result := tx.Model(model.BannerTag{}).Where("banner_id = ?", bannerID).Delete(banner_tags)
+	result := tx.Model(model.BannerTag{}).Where("banner_id = ?", bannerID).Delete([]model.BannerTag{})
 	if result.RowsAffected == 0 {
 		tx.Rollback()
 		return repository.ErrDeleteFind
@@ -102,7 +104,7 @@ func (p *Postgres) BannerIdDelete(bannerID int) error {
 		tx.Rollback()
 		return repository.ErrDb
 	}
-	if err := tx.Model(model.Banner{}).Where("banner_id = ?", bannerID).Delete(banner).Error; err != nil {
+	if err := tx.Model(model.Banner{}).Where("banner_id = ?", bannerID).Delete(model.Banner{}).Error; err != nil {
 		tx.Rollback()
 		return repository.ErrDeleteItem
 	}
