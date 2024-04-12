@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Banner struct {
@@ -93,3 +95,12 @@ func ConvertPostRequest(data *model.BannerPostRequest) (Banner, error) {
 // 	tx.Model(&BannerTag{}).Where("banner_id = ?", b.BannerID).Delete(&BannerTag{}, b.BannerID)
 // 	return nil
 // }
+
+func (b *Banner) AfterCreate(tx *gorm.DB) (err error) {
+	data := tx.Statement.Context.Value("banner_tags").([]BannerTag)
+	for i := range data {
+		data[i].BannerID = b.BannerID
+	}
+	tx.Create(data)
+	return nil
+}

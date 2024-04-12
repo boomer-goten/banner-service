@@ -20,4 +20,5 @@ tests:
 
 .PHONY: stress_test
 stress_test:
-	@go test ./tests/
+	@go test ./tests/1000RPS/stress.go
+	@go test ./tests/2000RPS/stress.go

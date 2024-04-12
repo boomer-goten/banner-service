@@ -12,19 +12,18 @@ type BannerTag struct {
 	Features  Feature `gorm:"foreignKey:FeatureID"`
 	Banners   Banner  `gorm:"foreignKey:BannerID"`
 	BannerID  int     `gorm:"index"`
-	TagID     int     `gorm:"index:,unique,composite:uniqueTagFeature"`
-	FeatureID int     `gorm:"index:,unique,composite:uniqueTagFeature"`
+	TagID     int     `gorm:"primaryKey;autoIncrement:false"`
+	FeatureID int     `gorm:"primaryKey;autoIncrement:false"`
 }
 
 func (BannerTag) TableName() string {
 	return "banner_tags"
 }
 
-func ConvertPostRequestTags(id int, data *model.BannerPostRequest) []BannerTag {
+func ConvertPostRequestTags(data *model.BannerPostRequest) []BannerTag {
 	slice := make([]BannerTag, 0, len(data.TagIds))
 	for _, val := range data.TagIds {
 		slice = append(slice, BannerTag{
-			BannerID:  id,
 			TagID:     int(val),
 			FeatureID: int(data.FeatureId),
 		})
