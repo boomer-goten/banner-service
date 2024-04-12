@@ -88,3 +88,8 @@ func ConvertPostRequest(data *model.BannerPostRequest) (Banner, error) {
 		UpdatedAt: time.Now(),
 	}, nil
 }
+
+// func (b *Banner) BeforeDelete(tx *gorm.DB) (err error) {
+// 	tx.Model(&BannerTag{}).Where("banner_id = ?", b.BannerID).Delete(&BannerTag{}, b.BannerID)
+// 	return nil
+// }

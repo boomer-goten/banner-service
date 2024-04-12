@@ -3,16 +3,17 @@ package model
 import (
 	"banner-server/internal/api/model"
 	"banner-server/pkg/repository"
+
+	"gorm.io/gorm"
 )
 
 type BannerTag struct {
-	Tags        Tag     `gorm:"foreignKey:TagID"`
-	Features    Feature `gorm:"foreignKey:FeatureID"`
-	Banners     Banner  `gorm:"foreignKey:BannerID"`
-	BannerID    int
-	TagID       int `gorm:"index:,unique,composite:uniqueTagFeature"`
-	FeatureID   int `gorm:"index:,unique,composite:uniqueTagFeature"`
-	BannerTagID int `gorm:"primaryKey"`
+	Tags      Tag     `gorm:"foreignKey:TagID"`
+	Features  Feature `gorm:"foreignKey:FeatureID"`
+	Banners   Banner  `gorm:"foreignKey:BannerID"`
+	BannerID  int     `gorm:"index"`
+	TagID     int     `gorm:"index:,unique,composite:uniqueTagFeature"`
+	FeatureID int     `gorm:"index:,unique,composite:uniqueTagFeature"`
 }
 
 func (BannerTag) TableName() string {
@@ -67,4 +68,9 @@ func ConvertPatchRequestTags(id int, data *model.BannerIdPatchRequest) ([]Banner
 	data.FeatureId = nil
 	data.TagIds = nil
 	return slice, err
+}
+
+func (b *BannerTag) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Model(Banner{}).Where("banner_id = ?", b.BannerID).Delete(Banner{})
+	return nil
 }

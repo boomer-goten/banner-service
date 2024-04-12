@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
+	"sync"
 
 	request "banner-server/internal/api/model"
 
@@ -15,17 +16,31 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+var (
+	once     = sync.Once{}
+	database *Postgres
+)
+
 type Postgres struct {
 	Db *gorm.DB
 }
 
 func New() *Postgres {
-	db, err := gorm.Open(postgres.Open(os.Getenv("POSTGRES")), &gorm.Config{})
-	if err != nil {
-		panic("coudn't connect to database")
-	}
-	database := &Postgres{db}
-	database.MigrateDB()
+	once.Do(func() {
+		db, err := gorm.Open(postgres.Open(os.Getenv("POSTGRES")), &gorm.Config{
+			DisableNestedTransaction: true,
+			PrepareStmt:              true,
+		})
+		rawDB, _ := db.DB()
+		rawDB.SetMaxOpenConns(48)
+		// rawDB.SetConnMaxIdleTime(time.Hour)
+		// rawDB.SetConnMaxLifetime(time.Hour)
+		if err != nil {
+			panic("coudn't connect to database")
+		}
+		database = &Postgres{db}
+		database.MigrateDB()
+	})
 	return database
 }
 
@@ -43,9 +58,9 @@ func (p *Postgres) MigrateDB() {
 	}
 	if !p.Db.Migrator().HasTable(&model.BannerTag{}) {
 		p.Db.AutoMigrate(&model.BannerTag{})
-		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_banners FOREIGN KEY (banner_id) REFERENCES banners(banner_id)")
-		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_tags FOREIGN KEY (tag_id) REFERENCES tags(tag_id)")
-		p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_features FOREIGN KEY (feature_id) REFERENCES features(feature_id)")
+		// p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_banners FOREIGN KEY (banner_id) REFERENCES banners(banner_id)")
+		// p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_tags FOREIGN KEY (tag_id) REFERENCES tags(tag_id)")
+		// p.Db.Exec("ALTER TABLE banner_tags ADD CONSTRAINT fk_banner_tags_features FOREIGN KEY (feature_id) REFERENCES features(feature_id)")
 		// fmt.Println(res.Error.Error())
 	}
 }
@@ -94,21 +109,22 @@ func (p *Postgres) BannerGet(tagID, featureID, offset, limit int, role string) (
 }
 
 func (p *Postgres) BannerIdDelete(bannerID int) error {
-	tx := p.Db.Begin()
-	result := tx.Model(model.BannerTag{}).Where("banner_id = ?", bannerID).Delete([]model.BannerTag{})
+	// tx := p.Db.Begin()
+	result := p.Db.Model(&model.BannerTag{}).Where("banner_id = ?", bannerID).Delete(&model.BannerTag{BannerID: bannerID})
+	// result := p.Db.Model(&model.Banner{}).Delete(&model.Banner{BannerID: bannerID})
 	if result.RowsAffected == 0 {
-		tx.Rollback()
+		// tx.Rollback()
 		return repository.ErrDeleteFind
 	}
 	if result.Error != nil {
-		tx.Rollback()
+		// tx.Rollback()
 		return repository.ErrDb
 	}
-	if err := tx.Model(model.Banner{}).Where("banner_id = ?", bannerID).Delete(model.Banner{}).Error; err != nil {
-		tx.Rollback()
-		return repository.ErrDeleteItem
-	}
-	tx.Commit()
+	// if err := tx.Model(model.Banner{}).Where("banner_id = ?", bannerID).Delete(model.Banner{}).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return repository.ErrDeleteItem
+	// }
+	// tx.Commit()
 	return nil
 }
 
@@ -185,7 +201,7 @@ func (p *Postgres) BannerPost(data *request.BannerPostRequest) (int, error) {
 		return 0, repository.ErrCreateItem
 	}
 	tags := model.ConvertPostRequestTags(banner.BannerID, data)
-	if err := tx.CreateInBatches(tags, len(tags)).Error; err != nil {
+	if err := tx.Create(tags).Error; err != nil {
 		tx.Rollback()
 		return 0, repository.ErrIndex
 	}

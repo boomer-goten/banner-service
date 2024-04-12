@@ -72,16 +72,18 @@ func main() {
 		}(int32(i))
 	}
 	go func() {
+		time.Sleep(5 * time.Second)
 		wg.Wait()
 		close(chanData)
 	}()
-	end := time.Now()
-	diff := end.Sub(start)
+	time.Sleep(5 * time.Second)
 	for square := range chanData {
 		slice = append(slice, square)
 	}
+	end := time.Now()
+	diff := end.Sub(start)
 	fmt.Printf("Выполнено %d вставок \n", len(slice))
-	fmt.Printf("Время выполнения %d вставок %v\n", len(slice), diff)
+	fmt.Printf("Время выполнения %d вставок %v\n", len(slice), diff-5*time.Second)
 	start = time.Now()
 	for _, value := range slice {
 		wg.Add(1)
