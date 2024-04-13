@@ -17,7 +17,7 @@ type value struct {
 	Banner_id int `json:"banner_id"`
 }
 
-func sendRequest(id int32, chanData chan<- int) {
+func sendRequestPost(id int32, chanData chan<- int) {
 	postData := model.BannerPostRequest{
 		TagIds:    []int32{id, id + 1},
 		FeatureId: id,
@@ -73,7 +73,7 @@ func main() {
 		time.Sleep(500 * time.Nanosecond)
 		go func(id int32) {
 			defer wg.Done()
-			sendRequest(id, chanData)
+			sendRequestPost(id, chanData)
 		}(int32(i))
 	}
 	go func() {

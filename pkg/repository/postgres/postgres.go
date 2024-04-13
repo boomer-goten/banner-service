@@ -148,7 +148,7 @@ func (p *Postgres) BannerIdPatch(id int, data *request.BannerIdPatchRequest) err
 		}
 		tx.Commit()
 		return nil
-	case repository.ErrPatchTags:
+	case repository.ErrPatchFeature:
 		if err = tx.Model(model.BannerTag{}).Clauses(clause.Returning{}).Where("banner_id = ?", id).Delete(&banner_tags).Error; err != nil {
 			tx.Rollback()
 			return repository.ErrDb
@@ -162,14 +162,16 @@ func (p *Postgres) BannerIdPatch(id int, data *request.BannerIdPatchRequest) err
 			return repository.ErrDb
 		}
 	}
-	result = tx.Model(model.BannerTag{}).CreateInBatches(dataBannerTags, len(dataBannerTags))
-	if result.RowsAffected == 0 {
-		tx.Rollback()
-		return repository.ErrFoundItem
-	}
-	if result.Error != nil {
-		tx.Rollback()
-		return repository.ErrDb
+	if errConvert == repository.ErrPatchTags || errConvert == nil {
+		result = tx.Model(model.BannerTag{}).CreateInBatches(dataBannerTags, len(dataBannerTags))
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return repository.ErrFoundItem
+		}
+		if result.Error != nil {
+			tx.Rollback()
+			return repository.ErrDb
+		}
 	}
 	tx.Commit()
 	return nil

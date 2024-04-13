@@ -18,8 +18,6 @@ services:
   db:
     restart: always
     image: postgres:latest
-    # volumes:
-    # - ./.database/postgres/16/main:/var/lib/postgresql/16/main
     environment:
       - POSTGRES_USER=alex
       - POSTGRES_PASSWORD=45hekmrf

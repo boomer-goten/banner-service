@@ -100,7 +100,7 @@ func (s *DefaultAPIService) UserBannerGet(ctx context.Context, tagId int32, feat
 			if ctx.Value(auth.ContextRoleKey) != "admin" && !content.IsActive {
 				return Response(http.StatusForbidden, nil), nil
 			}
-			return Response(http.StatusOK, content), nil
+			return Response(http.StatusOK, content.Banner), nil
 		}
 	}
 	content, isActive, err := s.db.UserBannerGet(int(tagId), int(featureId))

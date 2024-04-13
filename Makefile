@@ -2,10 +2,6 @@
 run_service:
 	@go run cmd/banner-server/main.go --config=env/local/.env
 
-.PHONY: compose
-compose:
-	@docker-compose up --build banner-server
-
 .PHONY: staticcheck
 staticcheck:
 	@go vet -vettool=$(which staticcheck -f) ./...
@@ -22,3 +18,23 @@ tests:
 stress_test:
 	@go test ./tests/1000RPS/stress.go
 	@go test ./tests/2000RPS/stress.go
+
+.PHONY: gen
+gen:
+	@go run ./tests/gen/generate_data.go
+
+.PHONY: compose-build-run
+compose-build-run:
+	@docker-compose up --build banner-server
+
+.PHONY: compose-build
+compose-build:
+	@docker-compose build banner-server
+
+.PHONY: compose-run
+compose-run:
+	@docker-compose up banner-server
+
+.PHONY: compose-down
+compose-down:
+	@docker-compose down
